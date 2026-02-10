@@ -8,3 +8,4 @@ passlib[bcrypt]
 python-dotenv
 pydantic
 email-validator
+pydantic-settings
