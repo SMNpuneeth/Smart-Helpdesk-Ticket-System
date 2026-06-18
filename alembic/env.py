@@ -11,6 +11,11 @@ load_dotenv()
 # access to the values within the .ini file in use.
 config = context.config
 
+# Override sqlalchemy.url from app settings (avoids broken ${DATABASE_URL}
+# interpolation in alembic.ini and keeps a single source of truth).
+from core.config import settings  # noqa: E402
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 if config.config_file_name is not None:
