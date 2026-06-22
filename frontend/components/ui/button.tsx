@@ -40,12 +40,13 @@ const buttonVariants = cva(
   }
 )
 
-function Button({
-  className,
-  variant = "default",
-  size = "default",
-  ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+type ButtonProps = (ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) & {
+  // Compatibility: many code paths use shadcn-style `asChild` to render the button as a child element.
+  // Our underlying BaseUI Button typing may not expose this, so we accept it here.
+  asChild?: boolean
+}
+
+function Button({ className, variant = "default", size = "default", ...props }: ButtonProps) {
   return (
     <ButtonPrimitive
       data-slot="button"

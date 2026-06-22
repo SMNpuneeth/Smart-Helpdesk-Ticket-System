@@ -8,6 +8,7 @@ import {
   getUserById,
   listUsers,
   updateUserRole,
+  deleteUser,
 } from "@/lib/services/user.service"
 import type {
   AdminCreateUserInput,
@@ -18,10 +19,11 @@ import type {
 const USERS_KEY = ["users"] as const
 const userKey = (id: number) => ["users", id] as const
 
-export function useUsers() {
+export function useUsers(enabled = true) {
   return useQuery({
     queryKey: [...USERS_KEY, "list"],
     queryFn: listUsers,
+    enabled,
   })
 }
 
@@ -57,5 +59,15 @@ export function useUpdateUserRole(id: number) {
 export function useResetPassword(id: number) {
   return useMutation({
     mutationFn: (input: ResetPasswordInput) => adminResetPassword(id, input),
+  })
+}
+
+export function useDeleteUser() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => deleteUser(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: USERS_KEY })
+    },
   })
 }

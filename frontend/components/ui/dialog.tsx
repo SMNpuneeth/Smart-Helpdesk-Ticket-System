@@ -140,7 +140,6 @@ export {
   DialogTitle,
   DialogDescription,
 }
-export type { DialogHandle } from "@base-ui/react/dialog"
 
 interface ConfirmDialogProps {
   open: boolean

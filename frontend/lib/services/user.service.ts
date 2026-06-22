@@ -2,7 +2,7 @@
 
 import { apiClient, ENDPOINTS, extractErrorMessage } from "@/lib/api"
 import type {
-  ListUsersQuirk,
+  ApiSuccessEnvelope,
   ResetPasswordResponse,
   UserOut,
 } from "@/lib/types/api"
@@ -14,8 +14,10 @@ import type {
 
 export async function listUsers(): Promise<UserOut[]> {
   try {
-    const { data } = await apiClient.get<ListUsersQuirk>(ENDPOINTS.users.list)
-    return data.Data
+    const { data } = await apiClient.get<ApiSuccessEnvelope<{ users: UserOut[] }>>(
+      ENDPOINTS.users.list,
+    )
+    return data.data.users
   } catch (error) {
     throw new Error(extractErrorMessage(error, "Failed to load users"))
   }
@@ -69,5 +71,13 @@ export async function adminResetPassword(
     return data
   } catch (error) {
     throw new Error(extractErrorMessage(error, "Failed to reset password"))
+  }
+}
+
+export async function deleteUser(id: number): Promise<void> {
+  try {
+    await apiClient.delete(ENDPOINTS.users.delete(id))
+  } catch (error) {
+    throw new Error(extractErrorMessage(error, "Failed to delete user"))
   }
 }

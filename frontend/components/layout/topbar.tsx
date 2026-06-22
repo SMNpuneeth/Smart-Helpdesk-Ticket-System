@@ -1,7 +1,6 @@
 "use client"
 
 import { LogOut, Moon, Search, Settings, ShieldCheck, Sun, UserCircle2 } from "lucide-react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import * as React from "react"
 

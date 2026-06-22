@@ -12,6 +12,7 @@ from schemas.ticket import (
 from services.ticket_service import (
     create_ticket,
     get_my_tickets,
+    get_assigned_tickets,
     get_all_tickets,
     get_ticket_by_id,
     update_ticket,
@@ -38,6 +39,14 @@ def my_tickets(
 ) -> dict:
     tickets = get_my_tickets(db, current_user)
     return {"success": True, "message": "My tickets", "data": {"tickets": tickets}}
+
+@router.get("/assigned")
+def assigned_tickets(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(agent_dep),
+) -> dict:
+    tickets = get_assigned_tickets(db, current_user)
+    return {"success": True, "message": "Assigned tickets", "data": {"tickets": tickets}}
 
 @router.get("/")
 def all_tickets(

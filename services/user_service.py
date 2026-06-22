@@ -27,7 +27,7 @@ def list_users(db: Session) -> list[dict]:
     data: list[dict] = []
     for u in users:
         data.append(user_dict(u))
-    return { 'Data' : data}
+    return data
 
 def create_user_by_admin(db: Session, name: str, email: str, password: str, role: Role) -> dict:
     existing = db.query(User).filter(User.email == email).first()
@@ -56,11 +56,50 @@ def update_user_role(db: Session, user_id: int, role: Role) -> dict:
 
 def admin_pwd_update(db: Session,user_id: int,new_password:str):
     user = db.query(User).filter(User.id == user_id).first()
-    if not user_id:
+    if not user:
         raise HTTPException(status_code=404, detail="User not found")
     user.password_hash = hash_password(new_password)
     db.commit()
     db.refresh(user)
     return {"user_id": user_id}
+
+def delete_user_by_id_or_email(db: Session, user_id: int | None = None, email: str | None = None) -> dict:
+    from models.ticket import Ticket
+    from models.comment import TicketComment
+    
+    query = db.query(User)
+    if user_id is not None:
+        query = query.filter(User.id == user_id)
+    elif email is not None:
+        query = query.filter(User.email == email)
+    else:
+        raise HTTPException(status_code=400, detail="Provide user_id or email")
+        
+    user = query.first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    if user.role == Role.ADMIN:
+        raise HTTPException(status_code=403, detail="Cannot delete an admin user")
+
+    # 1. Delete comments created by the user
+    db.query(TicketComment).filter(TicketComment.user_id == user.id).delete(synchronize_session=False)
+
+    # 2. Unassign tickets assigned to this agent
+    db.query(Ticket).filter(Ticket.assigned_to == user.id).update({Ticket.assigned_to: None}, synchronize_session=False)
+
+    # 3. Get tickets created by this employee, delete comments on them, then delete the tickets
+    tickets_created = db.query(Ticket).filter(Ticket.created_by == user.id).all()
+    ticket_ids = [t.id for t in tickets_created]
+    if ticket_ids:
+        # Delete comments on those tickets
+        db.query(TicketComment).filter(TicketComment.ticket_id.in_(ticket_ids)).delete(synchronize_session=False)
+        # Delete the tickets
+        db.query(Ticket).filter(Ticket.id.in_(ticket_ids)).delete(synchronize_session=False)
+
+    # 4. Delete the user
+    db.delete(user)
+    db.commit()
+    return {"id": user.id, "email": user.email, "name": user.name}
 
 

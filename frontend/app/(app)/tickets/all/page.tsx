@@ -10,9 +10,22 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { PageHeader } from "@/components/layout/page-header"
 import { TicketCard } from "@/components/tickets/ticket-card"
 import { useAllTickets } from "@/lib/hooks/use-tickets"
+import { useAuth } from "@/lib/hooks/use-auth"
+import { ROLES } from "@/lib/constants"
+import { PermissionGate } from "@/components/auth/permission-gate"
 
 export default function AllTicketsPage() {
-  const { data, isLoading, isError, error, refetch } = useAllTickets()
+  const { user } = useAuth()
+  const isAdmin = user?.role === ROLES.ADMIN
+  const { data, isLoading, isError, error, refetch } = useAllTickets(!!user && isAdmin)
+
+  if (!isAdmin) {
+    return (
+      <PermissionGate allow={ROLES.ADMIN}>
+        <div />
+      </PermissionGate>
+    )
+  }
 
   return (
     <div className="space-y-6">

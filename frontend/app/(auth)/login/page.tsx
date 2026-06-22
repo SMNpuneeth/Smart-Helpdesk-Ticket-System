@@ -15,7 +15,9 @@ import { ROLES } from "@/lib/constants"
 import { login } from "@/lib/services/auth.service"
 import { loginSchema, type LoginInput } from "@/lib/schemas"
 
-export default function LoginPage() {
+import { Suspense } from "react"
+
+function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [submitting, setSubmitting] = React.useState(false)
@@ -97,6 +99,18 @@ export default function LoginPage() {
         </Link>
       </p>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-40 items-center justify-center">
+        <Spinner size={20} className="text-muted-foreground" />
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }
 

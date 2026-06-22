@@ -12,32 +12,27 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
   >("loading")
 
   React.useEffect(() => {
-    if (!hasToken()) {
-      setState("unauthorized")
-      return
-    }
-    const session = getCurrentSession()
-    if (!session) {
-      setState("unauthorized")
-      return
-    }
-    setState("authorized")
+    const timer = setTimeout(() => {
+      const isAuthorized = hasToken() && !!getCurrentSession()
+      if (isAuthorized) {
+        setState("authorized")
+      } else {
+        setState("unauthorized")
+        if (typeof window !== "undefined") {
+          const next = encodeURIComponent(window.location.pathname + window.location.search)
+          window.location.href = `/login?next=${next}`
+        }
+      }
+    }, 0)
+    return () => clearTimeout(timer)
   }, [])
 
-  if (state === "loading") {
+  if (state === "loading" || state === "unauthorized") {
     return (
       <div className="flex h-[60vh] items-center justify-center">
         <Spinner size={20} className="text-muted-foreground" />
       </div>
     )
-  }
-
-  if (state === "unauthorized") {
-    if (typeof window !== "undefined") {
-      const next = encodeURIComponent(window.location.pathname + window.location.search)
-      window.location.href = `/login?next=${next}`
-    }
-    return null
   }
 
   return <>{children}</>

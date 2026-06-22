@@ -14,6 +14,15 @@ export async function fetchMyTickets(): Promise<Ticket[]> {
   }
 }
 
+export async function fetchAssignedTickets(): Promise<Ticket[]> {
+  try {
+    const { data } = await apiClient.get<{ data: TicketList }>(ENDPOINTS.tickets.assignedTickets)
+    return data.data.tickets
+  } catch (error) {
+    throw new Error(extractErrorMessage(error, "Failed to load assigned tickets"))
+  }
+}
+
 export async function fetchAllTickets(): Promise<Ticket[]> {
   try {
     const { data } = await apiClient.get<{ data: TicketList }>(ENDPOINTS.tickets.all)

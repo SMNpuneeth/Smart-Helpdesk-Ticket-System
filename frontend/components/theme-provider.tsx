@@ -27,10 +27,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = React.useState(false)
 
   React.useEffect(() => {
-    const initial = getInitialTheme()
-    setThemeState(initial)
-    document.documentElement.classList.toggle("dark", initial === "dark")
-    setMounted(true)
+    const timer = setTimeout(() => {
+      const initial = getInitialTheme()
+      setThemeState(initial)
+      document.documentElement.classList.toggle("dark", initial === "dark")
+      setMounted(true)
+    }, 0)
+    return () => clearTimeout(timer)
   }, [])
 
   const setTheme = React.useCallback((next: Theme) => {

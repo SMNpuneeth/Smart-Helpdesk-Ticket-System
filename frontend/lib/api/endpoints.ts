@@ -21,11 +21,13 @@ export const ENDPOINTS = {
     updateRole: (id: number) => `${API_BASE}/User/${id}/role`,
     resetPassword: (id: number) =>
       `${API_BASE}/User/users/${id}/reset-password`,
+    delete: (id: number) => `${API_BASE}/User/?user_id=${id}`,
   },
 
   // Tickets
   tickets: {
     myTickets: `${API_BASE}/Ticket/me`,
+    assignedTickets: `${API_BASE}/Ticket/assigned`,
     all: `${API_BASE}/Ticket/`,
     create: `${API_BASE}/Ticket/`,
     byId: (id: number) => `${API_BASE}/Ticket/${id}`,

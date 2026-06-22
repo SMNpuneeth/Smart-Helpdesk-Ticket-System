@@ -34,12 +34,15 @@ interface ActionsProps {
 
 export function TicketActions({ ticket }: ActionsProps) {
   const { user } = useAuth()
+  const isAdmin = user?.role === ROLES.ADMIN
+
   const changeStatus = useChangeTicketStatus(ticket.id)
   const assign = useAssignTicket(ticket.id)
   const close = useCloseTicket(ticket.id)
-  const users = useUsers()
+  const users = useUsers(isAdmin)
   const [assignOpen, setAssignOpen] = React.useState(false)
-  const [pickedAgent, setPickedAgent] = React.useState<string>("")
+  const [pickedAgent, setPickedAgent] = React.useState<string | null>(null)
+
 
   const nextStatus = TICKET_NEXT_STATUS[ticket.status]
   const status: TicketStatus = ticket.status
@@ -47,16 +50,14 @@ export function TicketActions({ ticket }: ActionsProps) {
 
   const isOwner = user?.user_id === ticket.created_by
   const isAssignedAgent = user?.user_id === ticket.assigned_to
-  const isAdmin = user?.role === ROLES.ADMIN
 
   const canChangeStatus =
     !!nextStatus &&
     !isClosed &&
-    (isAdmin ||
-      (isAssignedAgent &&
-        (nextStatus === "in_progress" ||
-          nextStatus === "resolved" ||
-          nextStatus === "closed")))
+    isAssignedAgent &&
+    (nextStatus === "in_progress" ||
+      nextStatus === "resolved" ||
+      nextStatus === "closed")
   const canClose =
     status === "resolved" && !isClosed && (isAdmin || isAssignedAgent)
   const canAssign = isAdmin && status === "open" && !isOwner

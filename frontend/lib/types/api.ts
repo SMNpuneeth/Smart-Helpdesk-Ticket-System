@@ -13,14 +13,6 @@ export interface ApiErrorEnvelope {
 }
 
 /**
- * Backend's `list_users` quirk: it returns `{ Data: [...] }` directly,
- * not wrapped in the standard `success/message/data` envelope.
- */
-export interface ListUsersQuirk {
-  Data: UserOut[]
-}
-
-/**
  * `reset-password` returns `{ message, data }` without `success`.
  */
 export interface ResetPasswordResponse {

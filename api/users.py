@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from db.db import get_db
@@ -9,7 +9,8 @@ from services.user_service import (
     get_user_by_id,
     create_user_by_admin,
     update_user_role,
-    admin_pwd_update
+    admin_pwd_update,
+    delete_user_by_id_or_email
 )
 
 router = APIRouter(tags=["Users"])
@@ -65,3 +66,15 @@ def admin_reset_password(
 ) -> dict:
     result=  admin_pwd_update(db,user_id,data.new_password)
     return {"message": "Password reset successful", "data":result}
+
+@router.delete("/")
+def admin_delete_user(
+    user_id: int | None = None,
+    email: str | None = None,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(admin_dep),
+) -> dict:
+    if user_id is None and email is None:
+        raise HTTPException(status_code=400, detail="Provide user_id or email")
+    result = delete_user_by_id_or_email(db, user_id=user_id, email=email)
+    return {"success": True, "message": "User deleted successfully", "data": result}

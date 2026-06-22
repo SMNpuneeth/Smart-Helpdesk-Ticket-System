@@ -14,9 +14,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [hydrated, setHydrated] = React.useState(false)
 
   React.useEffect(() => {
-    const stored = window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY)
-    if (stored === "true") setCollapsed(true)
-    setHydrated(true)
+    const timer = setTimeout(() => {
+      const stored = window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY)
+      if (stored === "true") setCollapsed(true)
+      setHydrated(true)
+    }, 0)
+    return () => clearTimeout(timer)
   }, [])
 
   const toggle = React.useCallback(() => {

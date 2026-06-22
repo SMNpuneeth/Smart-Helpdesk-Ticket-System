@@ -75,6 +75,17 @@ def get_my_tickets(db: Session, current_user: dict) -> list[dict]:
         data.append(_ticket_dict(t))
     return data
 
+def get_assigned_tickets(db: Session, current_user: dict) -> list[dict]:
+    """Return tickets assigned to the current agent."""
+    user_id = current_user.get("user_id")
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="Invalid token payload")
+    tickets = db.query(Ticket).filter(Ticket.assigned_to == user_id).order_by(Ticket.id.asc()).all()
+    data: list[dict] = []
+    for t in tickets:
+        data.append(_ticket_dict(t))
+    return data
+
 def get_all_tickets(db: Session) -> list[dict]:
     tickets = db.query(Ticket).order_by(Ticket.id.asc()).all()
     data: list[dict] = []

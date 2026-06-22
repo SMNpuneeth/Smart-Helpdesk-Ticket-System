@@ -41,7 +41,7 @@ export default function RegisterPage() {
       <div className="space-y-2">
         <h2 className="text-2xl font-semibold tracking-tight">Create your account</h2>
         <p className="text-sm text-muted-foreground">
-          You'll join as an employee. Contact an admin to change roles.
+          You&apos;ll join as an employee. Contact an admin to change roles.
         </p>
       </div>
 

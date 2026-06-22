@@ -50,7 +50,7 @@ export default function TicketDetailPage({
   const isAdmin = user?.role === ROLES.ADMIN
   const canEdit =
     !isClosedTicket(ticket.status) && (isOwner || isAdmin) && ticket.status === TICKET_STATUS.OPEN
-  const canComment = !isClosedTicket(ticket.status)
+  const canComment = !isClosedTicket(ticket.status) && isOwner && user?.role === ROLES.EMPLOYEE
 
   return (
     <div className="space-y-6">

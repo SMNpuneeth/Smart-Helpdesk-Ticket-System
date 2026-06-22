@@ -2,7 +2,7 @@
 
 import { apiClient, ENDPOINTS, extractErrorMessage } from "@/lib/api"
 import { setToken, clearToken } from "@/lib/auth/token"
-import type { CurrentUser, LoginResponse, UserOut } from "@/lib/types"
+import type { ApiSuccessEnvelope, CurrentUser, LoginResponse, UserOut } from "@/lib/types"
 import type { LoginInput, RegisterInput } from "@/lib/schemas"
 
 export interface AuthSuccess {
@@ -10,7 +10,7 @@ export interface AuthSuccess {
   user: CurrentUser
 }
 
-async function extractUser(token: string): Promise<CurrentUser> {
+async function extractUser(): Promise<CurrentUser> {
   const { getCurrentSession } = await import("@/lib/auth/session")
   const session = getCurrentSession()
   if (!session) {
@@ -21,10 +21,14 @@ async function extractUser(token: string): Promise<CurrentUser> {
 
 export async function login(input: LoginInput): Promise<AuthSuccess> {
   try {
-    const { data } = await apiClient.post<LoginResponse>(ENDPOINTS.auth.login, input)
-    setToken(data.access_token)
-    const user = await extractUser(data.access_token)
-    return { token: data.access_token, user }
+    const { data } = await apiClient.post<ApiSuccessEnvelope<LoginResponse>>(
+      ENDPOINTS.auth.login,
+      input,
+    )
+    const token = data.data.access_token
+    setToken(token)
+    const user = await extractUser()
+    return { token, user }
   } catch (error) {
     clearToken()
     throw new Error(extractErrorMessage(error, "Invalid email or password"))

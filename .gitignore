@@ -1,5 +1,161 @@
+# ==========================================
+# Environment & Secrets
+# ==========================================
 .env
+.env.local
+.env.*.local
+*.env
+
+# ==========================================
+# Python - Virtual Environments
+# ==========================================
 .venv/
 venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# ==========================================
+# Python - Cache & Compiled Files
+# ==========================================
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ==========================================
+# Python - Testing & Coverage
+# ==========================================
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+htmlcov/
+*.pytest_cache
+
+# ==========================================
+# Python - Type Checking & Linting
+# ==========================================
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+.ruff_cache/
+
+# ==========================================
+# Database & Migrations (Local only)
+# ==========================================
+*.db
+*.sqlite
+*.sqlite3
+*.pid
+
+# ==========================================
+# IDE & Editor Files
+# ==========================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ==========================================
+# Logs
+# ==========================================
+*.log
+logs/
+*.log.*
+
+# ==========================================
+# Node / Next.js (Frontend)
+# ==========================================
+node_modules/
+.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# vercel
+.vercel
+
+# ==========================================
+# OS Files
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+$RECYCLE.BIN/
+
+# ==========================================
+# Temporary & Backup Files
+# ==========================================
+*.bak
+*.tmp
+*.swp
+*.swo
+*~
+*.orig
+*.rej
+
+# ==========================================
+# Claude / AI Tool Config (local only)
+# ==========================================
+.claude/

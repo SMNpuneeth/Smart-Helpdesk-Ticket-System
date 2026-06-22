@@ -5,7 +5,7 @@ import axios, { AxiosError, type AxiosInstance } from "axios"
 import { getToken, clearToken } from "@/lib/auth/token"
 
 export const apiClient: AxiosInstance = axios.create({
-  baseURL: "",
+  baseURL: "http://127.0.0.1:8000",
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",

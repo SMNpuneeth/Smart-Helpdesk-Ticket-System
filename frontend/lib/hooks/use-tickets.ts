@@ -12,6 +12,7 @@ import {
   closeTicket,
   createTicket,
   fetchAllTickets,
+  fetchAssignedTickets,
   fetchMyTickets,
   fetchTicketById,
   updateTicket,
@@ -22,17 +23,27 @@ import type { TicketStatus } from "@/lib/constants"
 const TICKETS_KEY = ["tickets"] as const
 const ticketKey = (id: number) => ["tickets", id] as const
 
-export function useMyTickets() {
+export function useMyTickets(enabled = true) {
   return useQuery({
     queryKey: [...TICKETS_KEY, "me"],
     queryFn: fetchMyTickets,
+    enabled,
   })
 }
 
-export function useAllTickets() {
+export function useAssignedTickets(enabled = true) {
+  return useQuery({
+    queryKey: [...TICKETS_KEY, "assigned"],
+    queryFn: fetchAssignedTickets,
+    enabled,
+  })
+}
+
+export function useAllTickets(enabled = true) {
   return useQuery({
     queryKey: [...TICKETS_KEY, "all"],
     queryFn: fetchAllTickets,
+    enabled,
   })
 }
 

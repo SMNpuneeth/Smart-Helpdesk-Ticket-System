@@ -15,7 +15,10 @@ export function useAuth() {
   const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
-    setHydrated(true)
+    const timer = setTimeout(() => {
+      setHydrated(true)
+    }, 0)
+    return () => clearTimeout(timer)
   }, [])
 
   const tokenAvailable = hydrated && hasToken()
