@@ -18,6 +18,19 @@ class TicketAssign(BaseModel):
 class TicketStatusUpdate(BaseModel):
     status: TicketStatus
 
+
+class TicketReopen(BaseModel):
+    reason: str = Field(min_length=1, max_length=4000, description="Why the ticket is being reopened.")
+
+
+class TicketClose(BaseModel):
+    resolution_comment: str = Field(
+        min_length=1,
+        max_length=4000,
+        description="Mandatory resolution comment recorded before closing.",
+    )
+
+
 class TicketOut(BaseModel):
     id: int
     title: str

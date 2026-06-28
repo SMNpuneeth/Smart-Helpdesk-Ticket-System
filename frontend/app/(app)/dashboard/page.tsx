@@ -1,6 +1,5 @@
 "use client"
 
-import { motion } from "framer-motion"
 import {
   AlertCircle,
   ArrowRight,
@@ -8,6 +7,7 @@ import {
   Clock,
   Inbox,
   Plus,
+  Star,
   Ticket,
   Users,
 } from "lucide-react"
@@ -20,8 +20,10 @@ import { EmptyState } from "@/components/ui/empty-state"
 import { ErrorState } from "@/components/ui/error-state"
 import { Skeleton } from "@/components/ui/skeleton"
 import { PageHeader } from "@/components/layout/page-header"
+import { StarPicker } from "@/components/tickets/star-picker"
 import { TicketCard } from "@/components/tickets/ticket-card"
 import { useAuth } from "@/lib/hooks/use-auth"
+import { useAgentRatingStats } from "@/lib/hooks/use-ratings"
 import { useMyTickets, useAllTickets, useAssignedTickets } from "@/lib/hooks/use-tickets"
 import { ROLES, TICKET_STATUS } from "@/lib/constants"
 
@@ -109,6 +111,8 @@ export default function DashboardPage() {
               </Link>
             </Button>
           </div>
+
+          <AgentRatingCard agentId={user?.user_id ?? null} />
 
           {isError ? (
             <ErrorState
@@ -262,6 +266,56 @@ function StatCard({
         </div>
         <div className="flex size-9 items-center justify-center rounded-lg bg-muted text-muted-foreground border border-border/40">
           {icon}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function AgentRatingCard({ agentId }: { agentId: number | null }) {
+  // Compute the round-up value once for the StarPicker (which is integer-only).
+  const query = useAgentRatingStats(agentId, !!agentId)
+  const stats = query.data
+  const average = stats?.average_rating ?? null
+  const total = stats?.total_ratings ?? 0
+  const filledStars = average === null ? 0 : Math.round(average)
+
+  return (
+    <Card className="border-border/60">
+      <CardContent className="p-5 md:p-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Star className="size-4 text-amber-400 fill-amber-400" />
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Average rating
+              </p>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <p className="text-3xl font-semibold tracking-tight">
+                {query.isLoading
+                  ? "—"
+                  : average === null
+                  ? "No ratings yet"
+                  : `${average.toFixed(1)} / 5`}
+              </p>
+              {average !== null && (
+                <p className="text-xs text-muted-foreground">
+                  Based on {total} rating{total === 1 ? "" : "s"}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {query.isLoading ? (
+              <Skeleton className="h-5 w-32" />
+            ) : (
+              <StarPicker value={filledStars} readOnly size={18} />
+            )}
+            {query.isError && (
+              <p className="text-xs text-destructive">Could not load rating.</p>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>

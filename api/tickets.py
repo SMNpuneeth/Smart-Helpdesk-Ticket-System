@@ -8,6 +8,8 @@ from schemas.ticket import (
     TicketUpdate,
     TicketAssign,
     TicketStatusUpdate,
+    TicketReopen,
+    TicketClose,
 )
 from services.ticket_service import (
     create_ticket,
@@ -19,6 +21,7 @@ from services.ticket_service import (
     assign_ticket,
     update_ticket_status,
     close_ticket,
+    reopen_ticket,
 )
 
 router = APIRouter( tags=["Tickets"])
@@ -98,8 +101,20 @@ def change_status(
 @router.patch("/{ticket_id}/close")
 def close(
     ticket_id: int,
+    payload: TicketClose,
     db: Session = Depends(get_db),
     current_user: dict = Depends(agent_or_admin_dep),
 ) -> dict:
-    ticket = close_ticket(db, current_user, ticket_id)
+    ticket = close_ticket(db, current_user, ticket_id, payload.resolution_comment)
     return {"success": True, "message": "Ticket closed", "data": ticket}
+
+
+@router.patch("/{ticket_id}/reopen")
+def reopen(
+    ticket_id: int,
+    payload: TicketReopen,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(employee_dep),
+) -> dict:
+    ticket = reopen_ticket(db, current_user, ticket_id, payload.reason)
+    return {"success": True, "message": "Ticket reopened", "data": ticket}

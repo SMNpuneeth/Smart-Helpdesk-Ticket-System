@@ -1,5 +1,5 @@
 # ==========================================
-# Environment & Secrets
+# Environment & Secrets — NEVER commit
 # ==========================================
 .env
 .env.local
@@ -7,7 +7,7 @@
 *.env
 
 # ==========================================
-# Python - Virtual Environments
+# Python — Virtual Environments
 # ==========================================
 .venv/
 venv/
@@ -17,7 +17,7 @@ env.bak/
 venv.bak/
 
 # ==========================================
-# Python - Cache & Compiled Files
+# Python — Cache & Compiled Files
 # ==========================================
 __pycache__/
 *.py[cod]
@@ -43,7 +43,7 @@ share/python-wheels/
 MANIFEST
 
 # ==========================================
-# Python - Testing & Coverage
+# Python — Testing & Coverage
 # ==========================================
 .tox/
 .nox/
@@ -57,10 +57,9 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 htmlcov/
-*.pytest_cache
 
 # ==========================================
-# Python - Type Checking & Linting
+# Python — Type Checking & Linting
 # ==========================================
 .mypy_cache/
 .dmypy.json
@@ -70,7 +69,7 @@ dmypy.json
 .ruff_cache/
 
 # ==========================================
-# Database & Migrations (Local only)
+# Database (local only)
 # ==========================================
 *.db
 *.sqlite
@@ -85,10 +84,8 @@ dmypy.json
 *.swp
 *.swo
 *~
-.DS_Store
-Thumbs.db
-ehthumbs.db
-Desktop.ini
+*.sublime-project
+*.sublime-workspace
 
 # ==========================================
 # Logs
@@ -115,10 +112,6 @@ node_modules/
 # production
 /build
 
-# misc
-.DS_Store
-*.pem
-
 # debug
 npm-debug.log*
 yarn-debug.log*
@@ -132,6 +125,9 @@ next-env.d.ts
 # vercel
 .vercel
 
+# turbo
+.turbo
+
 # ==========================================
 # OS Files
 # ==========================================
@@ -142,6 +138,7 @@ next-env.d.ts
 .Trashes
 ehthumbs.db
 Thumbs.db
+Desktop.ini
 $RECYCLE.BIN/
 
 # ==========================================
@@ -149,13 +146,20 @@ $RECYCLE.BIN/
 # ==========================================
 *.bak
 *.tmp
+*.orig
+*.rej
 *.swp
 *.swo
 *~
-*.orig
-*.rej
 
 # ==========================================
 # Claude / AI Tool Config (local only)
 # ==========================================
 .claude/
+
+# ==========================================
+# Misc
+# ==========================================
+*.pem
+*.p12
+*.key

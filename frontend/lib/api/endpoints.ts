@@ -35,11 +35,22 @@ export const ENDPOINTS = {
     assign: (id: number) => `${API_BASE}/Ticket/${id}/assign`,
     status: (id: number) => `${API_BASE}/Ticket/${id}/status`,
     close: (id: number) => `${API_BASE}/Ticket/${id}/close`,
+    reopen: (id: number) => `${API_BASE}/Ticket/${id}/reopen`,
   },
 
   // Comments
   comments: {
     list: (ticketId: number) => `${API_BASE}/Comment/${ticketId}/comments`,
     create: (ticketId: number) => `${API_BASE}/Comment/${ticketId}/comments`,
+  },
+
+  // Ratings
+  ratings: {
+    submit: (ticketId: number) => `${API_BASE}/Rating/?ticket_id=${ticketId}`,
+
+
+
+    byTicket: (ticketId: number) => `${API_BASE}/Rating/ticket/${ticketId}`,
+    byAgent: (agentId: number) => `${API_BASE}/Rating/agent/${agentId}`,
   },
 }

@@ -31,5 +31,10 @@ class Ticket(Base):
     created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
     assigned_to = Column(Integer, ForeignKey("users.id"), nullable=True)
 
+    # Tracks the number of completed reopen cycles.
+    # Starts at 1 for the original resolution cycle.
+    # Incremented every time the employee successfully reopens the ticket.
+    current_resolution_cycle = Column(Integer, nullable=False, default=1)
+
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=datetime.now(timezone.utc))

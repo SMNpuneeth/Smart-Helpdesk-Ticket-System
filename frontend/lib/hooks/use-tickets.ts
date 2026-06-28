@@ -15,9 +15,10 @@ import {
   fetchAssignedTickets,
   fetchMyTickets,
   fetchTicketById,
+  reopenTicket,
   updateTicket,
 } from "@/lib/services/ticket.service"
-import type { TicketCreateInput, TicketUpdateInput } from "@/lib/schemas"
+import type { TicketCloseInput, TicketCreateInput, TicketReopenInput, TicketUpdateInput } from "@/lib/schemas"
 import type { TicketStatus } from "@/lib/constants"
 
 const TICKETS_KEY = ["tickets"] as const
@@ -101,10 +102,30 @@ export function useChangeTicketStatus(id: number) {
 export function useCloseTicket(id: number) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: () => closeTicket(id),
+    mutationFn: (input: TicketCloseInput) =>
+      closeTicket(id, input.resolution_comment),
     onSuccess: (ticket) => {
       qc.setQueryData(ticketKey(id), ticket)
       qc.invalidateQueries({ queryKey: TICKETS_KEY })
+      // The mandatory resolution comment lands in the same thread, so
+      // refetch comments so the new entry shows up immediately.
+      qc.invalidateQueries({ queryKey: ["comments", id] })
+    },
+  })
+}
+
+export function useReopenTicket(id: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: TicketReopenInput) => reopenTicket(id, input.reason),
+    onSuccess: (ticket) => {
+      qc.setQueryData(ticketKey(id), ticket)
+      qc.invalidateQueries({ queryKey: TICKETS_KEY })
+      qc.invalidateQueries({ queryKey: ["comments", id] })
+      // The reopen comment thread change may have invalidated a rating
+      // lookup for this ticket; clear it so the rating form hides itself
+      // when the ticket is no longer closed.
+      qc.invalidateQueries({ queryKey: ["rating", id] })
     },
   })
 }

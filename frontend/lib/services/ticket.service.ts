@@ -95,11 +95,32 @@ export async function changeTicketStatus(
   }
 }
 
-export async function closeTicket(id: number): Promise<Ticket> {
+export async function closeTicket(
+  id: number,
+  resolutionComment: string,
+): Promise<Ticket> {
   try {
-    const { data } = await apiClient.patch<{ data: Ticket }>(ENDPOINTS.tickets.close(id))
+    const { data } = await apiClient.patch<{ data: Ticket }>(
+      ENDPOINTS.tickets.close(id),
+      { resolution_comment: resolutionComment },
+    )
     return data.data
   } catch (error) {
     throw new Error(extractErrorMessage(error, "Failed to close ticket"))
+  }
+}
+
+export async function reopenTicket(
+  id: number,
+  reason: string,
+): Promise<Ticket> {
+  try {
+    const { data } = await apiClient.patch<{ data: Ticket }>(
+      ENDPOINTS.tickets.reopen(id),
+      { reason },
+    )
+    return data.data
+  } catch (error) {
+    throw new Error(extractErrorMessage(error, "Failed to reopen ticket"))
   }
 }

@@ -14,6 +14,7 @@ import { CommentComposer } from "@/components/comments/comment-composer"
 import { CommentThread } from "@/components/comments/comment-thread"
 import { LifecycleStepper } from "@/components/tickets/lifecycle-stepper"
 import { PriorityBadge } from "@/components/tickets/priority-badge"
+import { RatingCard } from "@/components/tickets/rating-card"
 import { StatusBadge } from "@/components/tickets/status-badge"
 import { TicketActions } from "@/components/tickets/ticket-actions"
 import { PageHeader } from "@/components/layout/page-header"
@@ -48,9 +49,12 @@ export default function TicketDetailPage({
 
   const isOwner = user?.user_id === ticket.created_by
   const isAdmin = user?.role === ROLES.ADMIN
+  const isEmployee = user?.role === ROLES.EMPLOYEE
   const canEdit =
     !isClosedTicket(ticket.status) && (isOwner || isAdmin) && ticket.status === TICKET_STATUS.OPEN
   const canComment = !isClosedTicket(ticket.status) && isOwner && user?.role === ROLES.EMPLOYEE
+  const canRate =
+    isClosedTicket(ticket.status) && isEmployee && isOwner
 
   return (
     <div className="space-y-6">
@@ -104,7 +108,7 @@ export default function TicketDetailPage({
                 </CardContent>
               </Card>
             )}
-            {!canComment && (
+            {isClosedTicket(ticket.status) && !canComment && !canRate && (
               <p className="text-xs text-muted-foreground">
                 This ticket is closed and no longer accepts new comments.
               </p>
@@ -158,6 +162,8 @@ export default function TicketDetailPage({
               <TicketActions ticket={ticket} />
             </CardContent>
           </Card>
+
+          {canRate && <RatingCard ticketId={ticket.id} />}
         </div>
       </div>
     </div>

@@ -1,0 +1,55 @@
+# ==========================================
+# .dockerignore — backend context (repo root)
+# ==========================================
+
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# Local environment & secrets (never bake these into an image)
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+*.egg-info/
+build/
+dist/
+
+# Logs
+*.log
+logs/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Frontend (not needed in the backend image)
+frontend/
+
+# Docker files themselves (don't bake into image)
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Documentation that doesn't need to ship
+README.md
+CLAUDE.md
+LICENSE

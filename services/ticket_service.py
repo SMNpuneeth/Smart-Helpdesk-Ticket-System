@@ -112,9 +112,11 @@ def update_ticket(db: Session, current_user: dict, ticket_id: int, payload: Tick
     # Closed tickets cannot be edited
     if ticket.status == TicketStatus.CLOSED:
         raise HTTPException(status_code=400, detail="Closed tickets cannot be edited")
+    # Reopened tickets behave like open tickets for editing purposes (priority
+    # can still be changed while they are not yet re-assigned).
     # Priority cannot be changed after assignment
     if payload.priority is not None:
-        if ticket.status != TicketStatus.OPEN:
+        if ticket.status not in (TicketStatus.OPEN, TicketStatus.REOPENED):
             raise HTTPException(status_code=400, detail="Priority cannot be changed after assignment")
         ticket.priority = payload.priority
     # Update title|description if provided
@@ -140,8 +142,9 @@ def assign_ticket(db: Session, current_user: dict, ticket_id: int, agent_id: int
         raise HTTPException(status_code=404, detail="Agent not found")
     if agent.role.value != Role.AGENT.value:
         raise HTTPException(status_code=400, detail="User is not an agent")
-    if ticket.status != TicketStatus.OPEN:
-        raise HTTPException(status_code=400, detail="Ticket can be assigned only when status is open")
+    # An open OR a reopened ticket can be assigned.
+    if ticket.status not in (TicketStatus.OPEN, TicketStatus.REOPENED):
+        raise HTTPException(status_code=400, detail="Ticket can be assigned only when status is open or reopened")
     ticket.assigned_to = agent_id
     ticket.status = TicketStatus.ASSIGNED
     ticket.updated_at = _now()
@@ -162,6 +165,8 @@ def update_ticket_status(db: Session, current_user: dict, ticket_id: int, new_st
         TicketStatus.ASSIGNED: TicketStatus.IN_PROGRESS,
         TicketStatus.IN_PROGRESS: TicketStatus.RESOLVED,
         TicketStatus.RESOLVED: TicketStatus.CLOSED,
+        # Reopened tickets follow the same forward path as fresh open ones.
+        TicketStatus.REOPENED: TicketStatus.ASSIGNED,
     }
     expected_next = allowed_next.get(ticket.status)
     if expected_next is None:
@@ -194,8 +199,88 @@ def update_ticket_status(db: Session, current_user: dict, ticket_id: int, new_st
     db.refresh(ticket)
     return _ticket_dict(ticket)
 
-def close_ticket(db: Session, current_user: dict, ticket_id: int) -> dict:
+def close_ticket(
+    db: Session,
+    current_user: dict,
+    ticket_id: int,
+    resolution_comment: str | None = None,
+) -> dict:
+    """Close a ticket.
+
+    A non-empty `resolution_comment` is REQUIRED. When provided, it is
+    persisted as a regular `ticket_comments` row in the same transaction as
+    the status flip. When omitted/blank, we raise 400 — the route layer
+    also enforces this via Pydantic, but the service is the last line of
+    defence in case the route is ever called with a None payload.
+    """
     ticket = _get_ticket_or_404(db, ticket_id)
     if ticket.status != TicketStatus.RESOLVED:
         raise HTTPException(status_code=400, detail="Ticket must be resolved before closing")
-    return update_ticket_status(db, current_user, ticket_id, TicketStatus.CLOSED)
+    if resolution_comment is None or not resolution_comment.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="A resolution comment is required to close a ticket.",
+        )
+
+    # Insert the resolution comment first so that the comment is always
+    # recorded even if the status flip fails partway. The transaction is
+    # single-commit, so partial state is not observable.
+    from models.comment import TicketComment  # local import to avoid cycle at module load
+
+    comment = TicketComment(
+        ticket_id=ticket_id,
+        user_id=current_user.get("user_id"),
+        comment=resolution_comment.strip(),
+        created_at=_now(),
+    )
+    db.add(comment)
+
+    # Delegate the status flip / auth checks to update_ticket_status so all
+    # role-based guards stay in one place.
+    ticket_dict = update_ticket_status(db, current_user, ticket_id, TicketStatus.CLOSED)
+    db.commit()
+    return ticket_dict
+
+
+def reopen_ticket(db: Session, current_user: dict, ticket_id: int, reason: str) -> dict:
+    """Reopen a closed ticket.
+
+    Only the employee who originally created the ticket may reopen it.
+    The reason is mandatory (non-empty after strip) and is recorded as a
+    regular `ticket_comments` row in the same transaction as the status flip,
+    so the discussion thread stays intact.
+    """
+    if current_user.get("role") != Role.EMPLOYEE.value:
+        raise HTTPException(status_code=403, detail="Only employees can reopen tickets")
+    user_id = current_user.get("user_id")
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="Invalid token payload")
+    if reason is None or not reason.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="A reason is required to reopen a ticket.",
+        )
+
+    ticket = _get_ticket_or_404(db, ticket_id)
+    if ticket.created_by != user_id:
+        raise HTTPException(status_code=403, detail="Only the ticket owner can reopen this ticket")
+    if ticket.status != TicketStatus.CLOSED:
+        raise HTTPException(status_code=400, detail="Only closed tickets can be reopened")
+
+    from models.comment import TicketComment  # local import to avoid cycle at module load
+
+    comment = TicketComment(
+        ticket_id=ticket_id,
+        user_id=user_id,
+        comment=reason.strip(),
+        created_at=_now(),
+    )
+    db.add(comment)
+
+    # Start a new resolution cycle.
+    ticket.current_resolution_cycle = (ticket.current_resolution_cycle or 1) + 1
+    ticket.status = TicketStatus.REOPENED
+    ticket.updated_at = _now()
+    db.commit()
+    db.refresh(ticket)
+    return _ticket_dict(ticket)

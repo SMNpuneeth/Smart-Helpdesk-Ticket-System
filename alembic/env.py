@@ -29,6 +29,7 @@ from db.db import Base
 from models.user import User
 from models.ticket import Ticket
 from models.comment import TicketComment
+from models.rating import TicketRating
 
 target_metadata = Base.metadata
 

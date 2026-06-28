@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, ChevronRight, X } from "lucide-react"
+import { Check, ChevronRight, RotateCcw, X } from "lucide-react"
 import * as React from "react"
 import { toast } from "sonner"
 
@@ -15,8 +15,10 @@ import {
 } from "@/components/ui/dialog"
 import { Spinner } from "@/components/ui/spinner"
 import { PermissionGate } from "@/components/auth/permission-gate"
-import { ROLES, TICKET_NEXT_STATUS, TICKET_STATUS_LABELS, type TicketStatus } from "@/lib/constants"
-import { useAssignTicket, useChangeTicketStatus, useCloseTicket } from "@/lib/hooks/use-tickets"
+import { CloseTicketDialog } from "@/components/tickets/close-ticket-dialog"
+import { ReopenDialog } from "@/components/tickets/reopen-dialog"
+import { ROLES, TICKET_NEXT_STATUS, TICKET_STATUS, TICKET_STATUS_LABELS, type TicketStatus } from "@/lib/constants"
+import { useAssignTicket, useChangeTicketStatus } from "@/lib/hooks/use-tickets"
 import { useUsers } from "@/lib/hooks/use-users"
 import { useAuth } from "@/lib/hooks/use-auth"
 import {
@@ -35,18 +37,20 @@ interface ActionsProps {
 export function TicketActions({ ticket }: ActionsProps) {
   const { user } = useAuth()
   const isAdmin = user?.role === ROLES.ADMIN
+  const isEmployee = user?.role === ROLES.EMPLOYEE
 
   const changeStatus = useChangeTicketStatus(ticket.id)
   const assign = useAssignTicket(ticket.id)
-  const close = useCloseTicket(ticket.id)
   const users = useUsers(isAdmin)
   const [assignOpen, setAssignOpen] = React.useState(false)
   const [pickedAgent, setPickedAgent] = React.useState<string | null>(null)
+  const [closeOpen, setCloseOpen] = React.useState(false)
+  const [reopenOpen, setReopenOpen] = React.useState(false)
 
 
   const nextStatus = TICKET_NEXT_STATUS[ticket.status]
   const status: TicketStatus = ticket.status
-  const isClosed = status === "closed"
+  const isClosed = status === TICKET_STATUS.CLOSED
 
   const isOwner = user?.user_id === ticket.created_by
   const isAssignedAgent = user?.user_id === ticket.assigned_to
@@ -56,11 +60,15 @@ export function TicketActions({ ticket }: ActionsProps) {
     !isClosed &&
     isAssignedAgent &&
     (nextStatus === "in_progress" ||
-      nextStatus === "resolved" ||
-      nextStatus === "closed")
+      nextStatus === "resolved")
   const canClose =
     status === "resolved" && !isClosed && (isAdmin || isAssignedAgent)
-  const canAssign = isAdmin && status === "open" && !isOwner
+  const canAssign =
+    isAdmin &&
+    (status === TICKET_STATUS.OPEN || status === TICKET_STATUS.REOPENED) &&
+    !isOwner
+  const canReopen =
+    isEmployee && isClosed && isOwner
 
   const agents = (users.data ?? []).filter((u) => u.role === ROLES.AGENT && u.is_active)
 
@@ -74,14 +82,8 @@ export function TicketActions({ ticket }: ActionsProps) {
     }
   }
 
-  const onClose = async () => {
-    try {
-      await close.mutateAsync()
-      toast.success("Ticket closed.")
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to close ticket")
-    }
-  }
+  // Closing now requires a mandatory resolution comment, captured via the
+  // CloseTicketDialog. The dialog owns the close mutation; nothing to do here.
 
   const onAssign = async () => {
     const agentId = Number(pickedAgent)
@@ -100,9 +102,28 @@ export function TicketActions({ ticket }: ActionsProps) {
   }
 
   if (isClosed) {
+    // For closed tickets the only allowed follow-up actions are:
+    //   - employee owner: reopen (with reason)
+    //   - admin: nothing (matches the existing rule that closed tickets
+    //     cannot be edited, and admins should not bypass the reopen flow).
     return (
-      <div className="text-sm text-muted-foreground rounded-md border border-border bg-muted/30 px-3 py-2">
-        This ticket is closed. No further actions are available.
+      <div className="flex flex-col gap-2">
+        {canReopen ? (
+          <Button variant="outline" onClick={() => setReopenOpen(true)}>
+            <RotateCcw className="size-4" />
+            Reopen ticket
+          </Button>
+        ) : (
+          <div className="text-sm text-muted-foreground rounded-md border border-border bg-muted/30 px-3 py-2">
+            This ticket is closed. No further actions are available.
+          </div>
+        )}
+
+        <ReopenDialog
+          ticketId={ticket.id}
+          open={reopenOpen}
+          onOpenChange={setReopenOpen}
+        />
       </div>
     )
   }
@@ -118,8 +139,7 @@ export function TicketActions({ ticket }: ActionsProps) {
       )}
 
       {canClose && (
-        <Button variant="outline" onClick={onClose} disabled={close.isPending}>
-          {close.isPending && <Spinner className="mr-2" />}
+        <Button variant="outline" onClick={() => setCloseOpen(true)}>
           <Check className="size-4" />
           Close ticket
         </Button>
@@ -175,6 +195,12 @@ export function TicketActions({ ticket }: ActionsProps) {
           </DialogFooter>
         </DialogContent>
       </DialogRoot>
+
+      <CloseTicketDialog
+        ticketId={ticket.id}
+        open={closeOpen}
+        onOpenChange={setCloseOpen}
+      />
     </div>
   )
 }

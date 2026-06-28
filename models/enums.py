@@ -17,3 +17,4 @@ class TicketStatus(str, Enum):
     IN_PROGRESS = "in_progress"
     RESOLVED = "resolved"
     CLOSED = "closed"
+    REOPENED = "reopened"

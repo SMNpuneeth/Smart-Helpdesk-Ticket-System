@@ -60,3 +60,32 @@ export const ticketAssignSchema = z.object({
 export const ticketStatusUpdateSchema = z.object({
   status: ticketStatusSchema,
 })
+
+/**
+ * Reason is mandatory and trimmed server-side as well.
+ * The dialog button is also disabled until this is satisfied so the user
+ * gets immediate feedback in addition to Zod's structured error message.
+ */
+export const ticketReopenSchema = z.object({
+  reason: z
+    .string()
+    .trim()
+    .min(1, "Please provide a reason for reopening this ticket.")
+    .max(4000, "Reason is too long (max 4000 characters)."),
+})
+
+export type TicketReopenInput = z.infer<typeof ticketReopenSchema>
+
+/**
+ * Mandatory resolution comment used when an agent (or admin) closes a
+ * resolved ticket. Mirrors the backend Pydantic `TicketClose` schema.
+ */
+export const ticketCloseSchema = z.object({
+  resolution_comment: z
+    .string()
+    .trim()
+    .min(1, "A resolution comment is required to close this ticket.")
+    .max(4000, "Comment is too long (max 4000 characters)."),
+})
+
+export type TicketCloseInput = z.infer<typeof ticketCloseSchema>
